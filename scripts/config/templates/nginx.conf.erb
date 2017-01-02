@@ -56,7 +56,7 @@ http {
     <% if clean_urls %>
       try_files $uri $uri/ $uri.html $fallback;
     <% else %>
-      try_files $uri $uri/ $fallback;
+      try_files $uri $uri/index.html $uri/ $fallback;
     <% end %>
     }
 
