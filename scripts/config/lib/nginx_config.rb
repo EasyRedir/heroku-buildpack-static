@@ -10,7 +10,8 @@ class NginxConfig
     https_only: false,
     index: false,
     worker_connections: 512,
-    server_name: nil
+    server_name: false,
+    keepalive_timeout: 5
   }
 
   def initialize(json_file)
@@ -37,6 +38,7 @@ class NginxConfig
     json["clean_urls"] ||= DEFAULT[:clean_urls]
     json["https_only"] ||= DEFAULT[:https_only]
     json["index"] ||= DEFAULT[:index]
+    json["keepalive_timeout"] ||= DEFAULT[:keepalive_timeout]
 
     json["routes"] ||= {}
     json["routes"] = NginxConfigUtil.parse_routes(json["routes"])
