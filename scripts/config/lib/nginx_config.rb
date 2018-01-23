@@ -8,10 +8,15 @@ class NginxConfig
     encoding: "UTF-8",
     clean_urls: false,
     https_only: false,
-    index: false,
     worker_connections: 512,
+    index: false,
     server_name: false,
-    keepalive_timeout: 5
+    keepalive_timeout: 5,
+    resolver: "8.8.8.8",
+    logging: {
+      "access" => true,
+      "error" => "error"
+    }
   }
 
   def initialize(json_file)
@@ -22,17 +27,23 @@ class NginxConfig
     json["server_name"] ||= ENV['NGINX_SERVER_NAME'] || DEFAULT[:server_name]
     json["root"] ||= DEFAULT[:root]
     json["encoding"] ||= DEFAULT[:encoding]
+
+    index = 0
     json["proxies"] ||= {}
     json["proxies"].each do |loc, hash|
       evaled_origin = NginxConfigUtil.interpolate(hash['origin'], ENV)
-      if evaled_origin != "/"
-        json["proxies"][loc].merge!("origin" => evaled_origin + "/")
-      end
+      uri           = URI(evaled_origin)
 
-      uri = URI(evaled_origin)
-      json["proxies"][loc]["path"] = uri.path
-      uri.path = ""
-      json["proxies"][loc]["host"] = uri.to_s
+      json["proxies"][loc]["name"] = "upstream_endpoint_#{index}"
+      cleaned_path = uri.path
+      cleaned_path.chop! if cleaned_path.end_with?("/")
+      json["proxies"][loc]["path"] = cleaned_path
+      json["proxies"][loc]["host"] = uri.dup.tap {|u| u.path = '' }.to_s
+      %w(http https).each do |scheme|
+        json["proxies"][loc]["redirect_#{scheme}"] = uri.dup.tap {|u| u.scheme = scheme }.to_s
+        json["proxies"][loc]["redirect_#{scheme}"] += "/" if !uri.to_s.end_with?("/")
+      end
+      index += 1
     end
 
     json["clean_urls"] ||= DEFAULT[:clean_urls]
@@ -49,7 +60,21 @@ class NginxConfig
     end
 
     json["error_page"] ||= nil
-    json["debug"] ||= ENV['STATIC_DEBUG']
+    json["debug"] = ENV['STATIC_DEBUG']
+
+    logging = json["logging"] || {}
+    json["logging"] = DEFAULT[:logging].merge(logging)
+
+    nameservers = []
+    if File.exist?("/etc/resolv.conf")
+      File.open("/etc/resolv.conf", "r").each do |line|
+        next unless md = line.match(/^nameserver\s*(\S*)/)
+        nameservers << md[1]
+      end
+    end
+    nameservers << [DEFAULT[:resolver]] unless nameservers.empty?
+    json["resolver"] = nameservers.join(" ")
+
     json.each do |key, value|
       self.class.send(:define_method, key) { value }
     end
