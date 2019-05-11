@@ -9,11 +9,35 @@ events {
 
 http {
   gzip on;
-  gzip_comp_level 6;
-  gzip_min_length 512;
-  gzip_types text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript;
+  gzip_comp_level 9;
+  gzip_min_length 256;
   gzip_vary on;
   gzip_proxied any;
+  gzip_buffers 24 8k;
+  gzip_types
+    text/css
+    text/plain
+    text/javascript
+    text/xml
+    application/javascript
+    application/json
+    application/x-javascript
+    application/xml
+    application/xml+rss
+    application/xhtml+xml
+    application/x-font
+    application/x-font-ttf
+    application/x-font-truetype
+    application/x-font-otf
+    application/x-font-opentype
+    application/vnd.ms-fontobject
+    application/rss+xml
+    application/atom_xml
+    font/opentype
+    font/otf
+    font/ttf
+    image/svg+xml
+    image/x-icon;
 
   server_tokens off;
 
