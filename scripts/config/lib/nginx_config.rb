@@ -6,6 +6,7 @@ class NginxConfig
   DEFAULT = {
     root: "public_html/",
     encoding: "UTF-8",
+    webp_path: false,
     clean_urls: false,
     https_only: false,
     basic_auth: false,
@@ -29,6 +30,7 @@ class NginxConfig
     json["server_name"] ||= ENV['NGINX_SERVER_NAME'] || DEFAULT[:server_name]
     json["root"] ||= DEFAULT[:root]
     json["encoding"] ||= DEFAULT[:encoding]
+    json["webp_path"] ||= DEFAULT[:webp_path]
 
     index = 0
     json["proxies"] ||= {}

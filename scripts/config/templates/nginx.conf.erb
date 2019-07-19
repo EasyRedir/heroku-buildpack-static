@@ -61,6 +61,13 @@ http {
   #Must read the body in 5 seconds.
   client_body_timeout 5;
 
+<% if webp_path %>
+  map $http_accept $webp_suffix {
+    default   "";
+    "~*webp"  ".webp";
+  }
+<% end %>
+
   server {
     listen <%= port %> reuseport;
     charset <%= encoding %>;
@@ -96,6 +103,15 @@ http {
       try_files $uri $uri/index.html $uri/ $fallback;
     <% end %>
     }
+
+  <% if webp_path %>
+    location ~* ^<%= webp_path %>.+\.(png|jpg|jpeg)$ {
+      mruby_post_read_handler /app/bin/config/lib/ngx_mruby/headers.rb cache;
+      mruby_set $fallback /app/bin/config/lib/ngx_mruby/routes_fallback.rb cache;
+      add_header Vary Accept;
+      try_files $uri$webp_suffix $uri $uri/index.html $uri/ $fallback;
+    }
+  <% end %>
 
   <% if clean_urls %>
     location ~ \.html$ {

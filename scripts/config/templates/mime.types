@@ -22,6 +22,7 @@ types {
     image/x-jng                           jng;
     image/x-ms-bmp                        bmp;
     image/svg+xml                         svg;
+    image/webp                            webp;
 
     application/java-archive              jar war ear;
     application/json                      json;
